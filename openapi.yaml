@@ -1,0 +1,68 @@
+openapi: 3.1.0
+info:
+  title: Trader-GPT Actions
+  version: "1.0.0"
+  description: Acciones para consultar salud y precios desde tu API en Render.
+servers:
+  - url: https://trader-gpt.onrender.com
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Estado del servicio
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+  /api/v1/binance/price:
+    get:
+      operationId: getPrice
+      summary: Precio spot desde Binance
+      parameters:
+        - in: query
+          name: symbol
+          required: true
+          schema:
+            type: string
+          description: Ejemplo: XRP-EUR, XRPEUR o XRP/EUR
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  symbol:
+                    type: string
+                  price:
+                    type: number
+  /webhook:
+    post:
+      operationId: postWebhook
+      summary: Webhook simple (eco)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
