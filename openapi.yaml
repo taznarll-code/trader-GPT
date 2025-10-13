@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
-  title: Trader-GPT Actions (v4.0)
-  version: "4.0.1"
+  title: Trader-GPT Actions (v4.0.2)
+  version: "4.0.2"
   description: API central para GPT + Telegram sobre Render (Binance data, charts, webhooks).
 servers:
   - url: https://trader-gpt.onrender.com
@@ -19,60 +19,40 @@ components:
   schemas:
     Health:
       type: object
-      properties:
-        status:
-          type: string
-          example: ok
+      properties: { status: { type: string, example: ok } }
       required: [status]
-
     Price:
       type: object
       properties:
         symbol: { type: string, example: XRPEUR }
         price:  { type: number, example: 0.6789 }
       required: [symbol, price]
-
     KlinesItem:
-      description: Binance kline array (OHLCV)
       type: array
       items: {}
+      description: Binance kline array (OHLCV)
       example: [ 1499040000000, "0.0163", "0.0200", "0.0157", "0.0158", "148976.114", 1499644799999, "2434.19", 308, "1756.874", "28.4669", "0" ]
-
     EchoRequest:
       type: object
-      properties:
-        message: { type: string, example: "Hola GPT" }
+      properties: { message: { type: string, example: "Hola GPT" } }
       required: [message]
-
     EchoResponse:
       type: object
-      properties:
-        reply: { type: string, example: "Eco: Hola GPT" }
+      properties: { reply: { type: string, example: "Eco: Hola GPT" } }
       required: [reply]
-
     TelegramChat:
       type: object
-      properties:
-        id:
-          type: integer
-          example: 12345678
+      properties: { id: { type: integer, example: 12345678 } }
       required: [id]
-
     TelegramMessage:
       type: object
       properties:
-        chat:
-          $ref: '#/components/schemas/TelegramChat'
-        text:
-          type: string
-          example: "/precio ADA/EUR"
+        chat: { $ref: '#/components/schemas/TelegramChat' }
+        text: { type: string, example: "/precio ADA/EUR" }
       required: [chat, text]
-
     TelegramUpdate:
       type: object
-      properties:
-        message:
-          $ref: '#/components/schemas/TelegramMessage'
+      properties: { message: { $ref: '#/components/schemas/TelegramMessage' } }
       required: [message]
 
 paths:
@@ -87,7 +67,6 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Health' }
-              examples: { ok: { value: { status: "ok" } } }
 
   /api/v1/binance/price:
     get:
@@ -104,12 +83,8 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Price' }
-              examples: { sample: { value: { symbol: "XRPEUR", price: 0.6789 } } }
-        "400":
-          description: Parámetro faltante
+          content: { application/json: { schema: { $ref: '#/components/schemas/Price' } } }
+        "400": { description: Parámetro faltante }
 
   /api/v1/binance/klines:
     get:
@@ -125,15 +100,13 @@ paths:
         - in: query
           name: interval
           required: true
-          schema:
-            type: string
-            enum: [1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M]
-          example: 1m
+          schema: { type: string, enum: [1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M] }
+          example: 1h
         - in: query
           name: limit
           required: false
           schema: { type: integer, minimum: 1, maximum: 1000 }
-          example: 200
+          example: 100
       responses:
         "200":
           description: Lista de arrays OHLCV
@@ -147,22 +120,17 @@ paths:
     get:
       tags: [Charts]
       operationId: getChart
-      summary: Gráfico de velas con RSI y EMAs
-      description: |
-        Genera un gráfico PNG con velas OHLC (rango high/low sombreado), EMA20, EMA50, RSI(14) y volumen.
+      summary: Gráfico PNG (velas, EMA20/50, RSI14, volumen)
       parameters:
         - in: query
           name: symbol
           required: true
           schema: { type: string }
-          description: Par (ADA/EUR, XRP/EUR, BTC/EUR, etc.)
           example: "XRP-EUR"
         - in: query
           name: interval
           required: true
-          schema:
-            type: string
-            enum: [1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M]
+          schema: { type: string, enum: [1m,3m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,3d,1w,1M] }
           example: 1h
         - in: query
           name: limit
@@ -171,65 +139,41 @@ paths:
           example: 100
       responses:
         "200":
-          description: Imagen PNG con el gráfico
+          description: Imagen PNG
           content:
             image/png:
-              schema:
-                type: string
-                format: binary
-        "400": { description: Parámetro incorrecto o faltante }
-        "502": { description: Error al contactar con Binance }
-        "500": { description: Error interno }
+              schema: { type: string, format: binary }
 
   /webhook:
     post:
       tags: [Integrations]
-      security:
-        - bearerAuth: []   # Authorization: Bearer <WEBHOOK_TOKEN>
+      security: [ { bearerAuth: [] } ]
       operationId: postWebhook
-      summary: Webhook protegido (eco y futuras señales)
+      summary: Webhook protegido (Bearer)
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: '#/components/schemas/EchoRequest' }
-            examples: { sample: { value: { message: "Hola GPT" } } }
       responses:
         "200":
           description: OK
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/EchoResponse' }
-              examples: { sample: { value: { reply: "Eco: Hola GPT" } } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/EchoResponse' } } }
         "401": { description: Unauthorized }
 
   /telegram:
     post:
       tags: [Integrations]
       operationId: postTelegram
-      summary: Webhook para recibir mensajes del bot de Telegram
+      summary: Webhook del bot de Telegram
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/TelegramUpdate'
+            schema: { $ref: '#/components/schemas/TelegramUpdate' }
             examples:
-              start:
-                value:
-                  message:
-                    chat: { id: 12345678 }
-                    text: "/start"
-              price:
-                value:
-                  message:
-                    chat: { id: 12345678 }
-                    text: "/precio ADA/EUR"
-              chart:
-                value:
-                  message:
-                    chat: { id: 12345678 }
-                    text: "/grafico XRP/EUR"
+              price:  { value: { message: { chat: { id: 123 }, text: "/precio ADA/EUR" } } }
+              chart:  { value: { message: { chat: { id: 123 }, text: "/grafico XRP/EUR" } } }
       responses:
         "200":
           description: OK
@@ -237,5 +181,4 @@ paths:
             application/json:
               schema:
                 type: object
-                properties:
-                  ok: { type: boolean, example: true }
+                properties: { ok: { type: boolean, example: true } }
