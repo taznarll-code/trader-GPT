@@ -84,28 +84,18 @@ def binance_price():
     except requests.RequestException as e:
         return jsonify(error="Request to Binance failed", detail=str(e)), 502
 
-# =======================
-# Market: Klines
-# =======================
+# --- KLlNES ---
 @app.get("/api/v1/binance/klines")
 def binance_klines():
-    raw_symbol = request.args.get("symbol", "").strip()
-    interval = request.args.get("interval", "1h").strip()
-    limit = int(request.args.get("limit", 100))
+    symbol = request.args.get("symbol","").upper().replace("-","").replace("/","")
+    interval = request.args.get("interval","1h")
+    limit = request.args.get("limit","100")
+    if not symbol: return jsonify(error="Missing 'symbol'"), 400
+    r = requests.get("https://api.binance.com/api/v3/klines",
+                     params={"symbol": symbol, "interval": interval, "limit": limit}, timeout=10)
+    if r.status_code != 200: return jsonify(error="Binance", status=r.status_code, detail=r.text), 502
+    return jsonify(r.json()), 200
 
-    if not raw_symbol:
-        return jsonify(error="Missing 'symbol' (e.g. XRP-EUR)"), 400
-
-    sym = normalize_symbol(raw_symbol)
-    try:
-        r = requests.get(f"{BINANCE_BASE}/api/v3/klines",
-                         params={"symbol": sym, "interval": interval, "limit": limit},
-                         timeout=12)
-        if r.status_code != 200:
-            return jsonify(error="Binance response", status=r.status_code, detail=r.text), 502
-        return jsonify(r.json()), 200
-    except requests.RequestException as e:
-        return jsonify(error="Request to Binance failed", detail=str(e)), 502
 
 # =======================
 # Charts: PNG OHLC + EMA20/50 + RSI + Volumen
